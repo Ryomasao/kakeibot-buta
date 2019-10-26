@@ -13,9 +13,12 @@ app.post('/bot/webhook', line.middleware(lineConfig), (req, res, next) => {
   console.log(req.body)
 })
 
-const port = process.env.NODE_ENV === 'development' ? 8888 : 0
-const host = process.env.NODE_ENV === 'development' ? 'localhost' : ''
-
-app.listen(port, host, () => {
-  console.log(process.env.NODE_ENV, lineConfig)
-})
+if (process.env.NODE_ENV === 'development') {
+  app.listen(8888, 'localhost', () => {
+    console.log(process.env.NODE_ENV, lineConfig)
+  })
+} else {
+  app.listen(() => {
+    console.log(process.env.NODE_ENV, lineConfig)
+  })
+}
