@@ -1,6 +1,7 @@
 import Express from 'express'
 import * as line from '@line/bot-sdk'
 import { lineTextParser, createMessage } from './services/lineParser'
+import { transact, aggregate } from './services/gyoza'
 
 const app = Express()
 
@@ -56,10 +57,15 @@ app.get('/api/health', (req, res) => {
 app.use(Express.json()) // for parsing application/json
 app.use(Express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
-app.post('/message', (req, res) => {
+app.post('/message', async (req, res) => {
   const { text } = req.body
-  const data = lineTextParser(text)
-  res.send(data)
+  //const parsedObj = lineTextParser(text)
+  //if (parsedObj !== null) {
+  //  await transact({ ...parsedObj, amount: Number(parsedObj.amount) })
+  //}
+
+  //const amount = await aggregate()
+  //res.send({ amount })
 })
 
 app.listen(process.env.PORT || 8888)

@@ -3,33 +3,53 @@ import * as line from '@line/bot-sdk'
 
 const BOT_KEYWORD = '餃子'
 
-enum OpertationType {
+export enum OpertationType {
   deposit = 1,
   withdraw,
+  aggregate,
 }
 
-type ParsedItem = {
-  type: OpertationType
-  money: string
+type Transaction = {
+  type: OpertationType.deposit | OpertationType.withdraw
+  amount: number
 }
 
-export const lineTextParser = (text: string): ParsedItem | null => {
+type Inquiry = {
+  type: OpertationType.aggregate
+}
+
+type Operation = Transaction | Inquiry
+
+export const lineTextParser = (text: string): Operation | null => {
   if (!isBotKeyWord(text)) return null
 
   const operationType = getOperation(text)
   if (!operationType) return null
 
-  const moneyText = getMoneyText(text)
-  if (!moneyText) return null
+  if (operationType === OpertationType.aggregate) {
+    return { type: OpertationType.aggregate }
+  }
 
-  return { type: operationType, money: moneyText }
+  const amountText = getMoneyText(text)
+  if (!amountText) return null
+
+  return { type: operationType, amount: Number(amountText) }
 }
 
-export const createMessage = (obj: ParsedItem): line.TextMessage => {
-  const text =
-    obj.type === OpertationType.deposit
-      ? `🥟に${obj.money}円を入れるけろねえ`
-      : `🥟から${obj.money}円を出すけろねえ`
+export const operate = (op: Operation) => {}
+
+export const createMessage = (op: Operation): line.TextMessage => {
+  let text = ''
+
+  if (
+    op.type === OpertationType.deposit ||
+    op.type === OpertationType.withdraw
+  ) {
+    text =
+      op.type === OpertationType.deposit
+        ? `🥟に${op.amount}円を入れるけろねえ`
+        : `🥟から${op.amount}円を出すけろねえ`
+  }
 
   return {
     type: 'text',
@@ -50,6 +70,8 @@ const getMoneyText = (text: string): string | null => {
   return toASCII(results[0])
 }
 
+// 「餃子」から→withdraw
+// 「餃子」に→deposit
 const getOperation = (text: string): OpertationType | null => {
   const begin = text.indexOf(BOT_KEYWORD)
   const operationText = text.slice(

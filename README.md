@@ -14,6 +14,8 @@ $ heroku apps:create kakeibot-buta
 $heroku config:set LINE_CHANNEL_ID=<your secret ...>
 $heroku config:set LINE_CHANNEL_SECRET=<your secret ...>
 $heroku config:set LINE_ACCESS_TOKEN=<your secret ...>
+$heroku config:set FIRE_BASE_API_KEY=<it's not secret. but manage on env ...>
+$heroku config:set FIRE_BASE_PROJECT_ID=<it's not secret. but manage on env ...>
 ```
 
 ## DEV
