@@ -28,8 +28,8 @@ export const lineTextParser = (text: string): ParsedItem | null => {
 export const createMessage = (obj: ParsedItem): line.TextMessage => {
   const text =
     obj.type === OpertationType.deposit
-      ? `餃子に${obj.money}を入れるけろねえ`
-      : `餃子から${obj.money}を出すけろねえ`
+      ? `🥟に${obj.money}円を入れるけろねえ`
+      : `🥟から${obj.money}円を出すけろねえ`
 
   return {
     type: 'text',

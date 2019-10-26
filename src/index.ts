@@ -3,8 +3,6 @@ import * as line from '@line/bot-sdk'
 import { lineTextParser, createMessage } from './services/lineParser'
 
 const app = Express()
-//app.use(Express.json()) // for parsing application/json
-//app.use(Express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
 const lineConfig = {
   channelAccessToken: process.env.LINE_ACCESS_TOKEN || '',
@@ -51,6 +49,12 @@ app.get('/api/health', (req, res) => {
   const data = { message: 'hello' }
   res.send(data)
 })
+
+// app.useの箇所に注意する
+// line-sdkは、パースされてない素のbodyを扱いたいとのこと
+// https://line.github.io/line-bot-sdk-nodejs/guide/webhook.html#build-a-webhook-server-with-express
+app.use(Express.json()) // for parsing application/json
+app.use(Express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
 app.post('/message', (req, res) => {
   const { text } = req.body
