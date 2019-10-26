@@ -1,7 +1,10 @@
 import Express from 'express'
 import * as line from '@line/bot-sdk'
+import { lineTextParser, createMessage } from './services/lineParser'
 
 const app = Express()
+//app.use(Express.json()) // for parsing application/json
+//app.use(Express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
 const lineConfig = {
   channelAccessToken: process.env.LINE_ACCESS_TOKEN || '',
@@ -16,9 +19,13 @@ app.post('/bot/webhook', line.middleware(lineConfig), (req, res, next) => {
 
 const client = new line.Client(lineConfig)
 
-function handleEvent(event: any) {
-  console.log('token=', event.replyToken)
-  if (event.replyToken === '00000000000000000000000000000000') {
+const handleEvent = (event: any) => {
+  // Webhookとの疎通確認の場合のtokenはこれっぽい
+  // replyMessageで落ちるので、nullをresolveする
+  if (
+    event.replyToken === '00000000000000000000000000000000' ||
+    event.replyToken === 'ffffffffffffffffffffffffffffffff'
+  ) {
     return Promise.resolve(null)
   }
 
@@ -26,12 +33,15 @@ function handleEvent(event: any) {
     return Promise.resolve(null)
   }
 
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: event.message.text,
-  })
+  const parsedObj = lineTextParser(event.message.text)
+  if (!parsedObj) {
+    return Promise.resolve(null)
+  }
+
+  return client.replyMessage(event.replyToken, createMessage(parsedObj))
 }
 
+// Herokuとの疎通確認用
 app.get('/api/health', (req, res) => {
   //const data = {
   //  env: process.env.NODE_ENV,
@@ -39,6 +49,12 @@ app.get('/api/health', (req, res) => {
   //  config: lineConfig,
   //}
   const data = { message: 'hello' }
+  res.send(data)
+})
+
+app.post('/message', (req, res) => {
+  const { text } = req.body
+  const data = lineTextParser(text)
   res.send(data)
 })
 
