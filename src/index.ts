@@ -10,11 +10,16 @@ const lineConfig = {
 
 app.post('/bot/webhook', line.middleware(lineConfig), (req, res, next) => {
   res.sendStatus(200)
+  console.log(process.env.NODE_ENV, lineConfig)
   console.log(req.body)
 })
 
 app.get('/api/health', (req, res) => {
-  const data = { message: 'pong' }
+  const data = {
+    env: process.env.NODE_ENV,
+    port: process.env.PORT,
+    config: lineConfig,
+  }
   res.send(data)
 })
 
@@ -23,7 +28,5 @@ if (process.env.NODE_ENV === 'development') {
     console.log(process.env.NODE_ENV, lineConfig)
   })
 } else {
-  app.listen(() => {
-    console.log(process.env.NODE_ENV, lineConfig)
-  })
+  app.listen(process.env.PORT)
 }
