@@ -13,6 +13,11 @@ app.post('/bot/webhook', line.middleware(lineConfig), (req, res, next) => {
   console.log(req.body)
 })
 
+app.get('/api/health', (req, res) => {
+  const data = { message: 'pong' }
+  res.send(data)
+})
+
 if (process.env.NODE_ENV === 'development') {
   app.listen(8888, 'localhost', () => {
     console.log(process.env.NODE_ENV, lineConfig)
