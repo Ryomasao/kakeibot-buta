@@ -17,5 +17,5 @@ const port = process.env.NODE_ENV === 'development' ? 8888 : 0
 const host = process.env.NODE_ENV === 'development' ? 'localhost' : ''
 
 app.listen(port, host, () => {
-  console.log(process.env.NODE_ENV)
+  console.log(process.env.NODE_ENV, lineConfig)
 })
