@@ -1,6 +1,7 @@
 import Express from 'express'
 import * as line from '@line/bot-sdk'
-import { lineTextParser, createMessage, operate } from './services/lineParser'
+import { lineTextParser, createMessage } from './services/lineParser'
+import { operate } from './services/gyoza'
 
 const app = Express()
 
@@ -36,9 +37,9 @@ const handleEvent = async (event: any) => {
     return null
   }
 
-  await operate(parsedObj)
+  const operateResult = await operate(parsedObj)
 
-  return client.replyMessage(event.replyToken, createMessage(parsedObj))
+  return client.replyMessage(event.replyToken, createMessage(operateResult))
 }
 
 // Herokuとの疎通確認用
@@ -60,7 +61,9 @@ app.use(Express.urlencoded({ extended: true })) // for parsing application/x-www
 
 app.post('/message', async (req, res) => {
   const { text } = req.body
-  //const parsedObj = lineTextParser(text)
+  const parsedObj = lineTextParser(text)
+  res.send(parsedObj)
+
   //if (parsedObj !== null) {
   //  await transact({ ...parsedObj, amount: Number(parsedObj.amount) })
   //}

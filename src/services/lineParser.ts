@@ -1,6 +1,6 @@
 import { toASCII } from '../util/toASCII'
 import * as line from '@line/bot-sdk'
-import { transact, aggregate } from './gyoza'
+import { OpretateResult } from './gyoza'
 
 const BOT_KEYWORD = '餃子'
 
@@ -19,7 +19,7 @@ type Inquiry = {
   type: OpertationType.aggregate
 }
 
-type Operation = Transaction | Inquiry
+export type Operation = Transaction | Inquiry
 
 export const lineTextParser = (text: string): Operation | null => {
   if (!isBotKeyWord(text)) return null
@@ -37,16 +37,7 @@ export const lineTextParser = (text: string): Operation | null => {
   return { type: operationType, amount: Number(amountText) }
 }
 
-export const operate = async (op: Operation) => {
-  if (
-    op.type === OpertationType.deposit ||
-    op.type === OpertationType.withdraw
-  ) {
-    await transact(op)
-  }
-}
-
-export const createMessage = (op: Operation): line.TextMessage => {
+export const createMessage = (op: OpretateResult): line.TextMessage => {
   let text = ''
 
   if (
@@ -57,6 +48,8 @@ export const createMessage = (op: Operation): line.TextMessage => {
       op.type === OpertationType.deposit
         ? `🥟に${op.amount}円を入れるけろねえ`
         : `🥟から${op.amount}円を出すけろねえ`
+  } else {
+    text = `🥟の中身は${op.amount}円けろねえ`
   }
 
   return {
@@ -80,16 +73,19 @@ const getMoneyText = (text: string): string | null => {
 
 // 「餃子」から→withdraw
 // 「餃子」に→deposit
+// 「餃子」の中身→aggregate
 const getOperation = (text: string): OpertationType | null => {
   const begin = text.indexOf(BOT_KEYWORD)
   const operationText = text.slice(
     begin + BOT_KEYWORD.length,
-    begin + BOT_KEYWORD.length + 2
+    begin + BOT_KEYWORD.length + 3
   )
 
-  if (operationText === 'から') return OpertationType.withdraw
+  if (operationText.slice(0, 2) === 'から') return OpertationType.withdraw
 
   if (operationText[0] === 'に') return OpertationType.deposit
+
+  if (operationText.slice(0, 3) === 'の中身') return OpertationType.aggregate
 
   return null
 }
