@@ -1,7 +1,6 @@
 import Express from 'express'
 import * as line from '@line/bot-sdk'
-import { lineTextParser, createMessage } from './services/lineParser'
-import { transact, aggregate } from './services/gyoza'
+import { lineTextParser, createMessage, operate } from './services/lineParser'
 
 const app = Express()
 
@@ -18,24 +17,26 @@ app.post('/bot/webhook', line.middleware(lineConfig), (req, res, next) => {
 
 const client = new line.Client(lineConfig)
 
-const handleEvent = (event: any) => {
+const handleEvent = async (event: any) => {
   // Webhookとの疎通確認の場合のtokenはこれっぽい
   // replyMessageで落ちるので、nullをresolveする
   if (
     event.replyToken === '00000000000000000000000000000000' ||
     event.replyToken === 'ffffffffffffffffffffffffffffffff'
   ) {
-    return Promise.resolve(null)
+    return null
   }
 
   if (event.type !== 'message' || event.message.type !== 'text') {
-    return Promise.resolve(null)
+    return null
   }
 
   const parsedObj = lineTextParser(event.message.text)
   if (!parsedObj) {
-    return Promise.resolve(null)
+    return null
   }
+
+  await operate(parsedObj)
 
   return client.replyMessage(event.replyToken, createMessage(parsedObj))
 }

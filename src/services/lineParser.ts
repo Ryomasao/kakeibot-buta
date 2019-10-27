@@ -1,5 +1,6 @@
 import { toASCII } from '../util/toASCII'
 import * as line from '@line/bot-sdk'
+import { transact, aggregate } from './gyoza'
 
 const BOT_KEYWORD = '餃子'
 
@@ -36,7 +37,14 @@ export const lineTextParser = (text: string): Operation | null => {
   return { type: operationType, amount: Number(amountText) }
 }
 
-export const operate = (op: Operation) => {}
+export const operate = async (op: Operation) => {
+  if (
+    op.type === OpertationType.deposit ||
+    op.type === OpertationType.withdraw
+  ) {
+    await transact(op)
+  }
+}
 
 export const createMessage = (op: Operation): line.TextMessage => {
   let text = ''
