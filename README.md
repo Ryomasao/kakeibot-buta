@@ -1,4 +1,6 @@
-# INFO
+# This is Simple Line Bot on Heroku with FireBase
+
+## INFO
 
 https://kakeibot-buta.herokuapp.com/
 https://git.heroku.com/kakeibot-buta.git
@@ -24,7 +26,7 @@ $heroku config:set FIRE_BASE_PROJECT_ID=<it's not secret. but manage on env ...>
 $ yarn dev
 ```
 
-## Debug
+## DEBUG
 
 You can simple POST with `util/curl.sh`.
 
@@ -37,3 +39,7 @@ $ git push heroku master
 ```
 
 ※ I've setted up master branch to heroku/master
+
+## TEST
+jest + supertest + typescript.
+
