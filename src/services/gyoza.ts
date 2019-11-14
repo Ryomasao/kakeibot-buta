@@ -1,6 +1,8 @@
 import { db } from '../firebase'
 import { OpertationType, Operation } from './lineParser'
 
+db.collection('hoge')
+
 type Transaction = {
   type: OpertationType
   amount: number
