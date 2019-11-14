@@ -1,9 +1,6 @@
 import Express from 'express'
 import request from 'supertest'
 import route from '../route/'
-import { Client } from '@line/bot-sdk'
-//import * as line from '@line/bot-sdk'
-
 
 // https://medium.com/@rickhanlonii/understanding-jest-mocks-f0046c68e53c
 // https://expressjs.com/ja/guide/writing-middleware.html
@@ -18,30 +15,35 @@ import { Client } from '@line/bot-sdk'
 //   }
 // })
 
+const event = {
+  replyToken:'aaa',
+  type:'message',
+  message: {
+    type: 'text',
+    text: 'hello'
+  }
+}
 
-const lineMock = (mockObj: {text:string}) => {
-        const event = {
-          replyToken:'aaa',
-          type:'message',
-          message: {
-            type: 'text',
-            text: mockObj.text
-          }
-        }
+// https://soumak77.github.io/firebase-mock/tutorials/integration/jest.html
+jest.mock('../firebase', () => ({
+  db: 'hoge'
+}))
 
-  return jest.fn(() => {
-    return (req:any, res:any, next:any) => {
+jest.mock('@line/bot-sdk', () => {
+  return {
+    // 以下の関数をjest.mock外に切り出すと、jest実行時にmiddlewareがundefinedになる。
+    // scopeがよくわからない。
+
+    // Lineのリクエストから各種情報を取得するmiddlewareのモック
+    middleware: (config: any) => {
+      return (req:any, res:any, next:any) => {
         req.body = {
           events:[event]
         }
         next()
-    }
-  })
-}
-
-jest.mock('@line/bot-sdk', () => {
-  return {
-    middleware: lineMock,
+      }
+    },
+    // BotがLineにレスポンスを返す機能のモック
     Client: jest.fn(() => {
       return {
         replyMessage:() => {
@@ -74,11 +76,11 @@ describe("test POST /bot/webhook", () => {
     const message = ''
     const res:any = await request(app).post('/bot/webhook')
     .send({message})
-    expect(res.body).toEqual({message: 'hello'})
+    expect(res.body).toEqual([null])
   })
   it.todo('メッセージに「餃子に」が含まれていて、数値がない場合は処理対象外になること')
   it.todo('メッセージに「餃子に」が含まれていて、数値がある場合')
   it.todo('メッセージに「餃子から」が含まれていて、数値がない場合は処理対象外になること')
-  it.todo('メッセージに「餃子から」が含まれていて、数値がある場合')
+  it.todo('メッセージに「餃子から」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「」を返すこと')
   it.todo('メッセージに「餃子の中身」が含まれている場合')
 })
