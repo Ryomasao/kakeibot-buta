@@ -1,8 +1,6 @@
 import { db } from '../firebase'
 import { OpertationType, Operation } from './lineParser'
 
-db.collection('hoge')
-
 type Transaction = {
   type: OpertationType
   amount: number
@@ -49,27 +47,6 @@ export const aggregate = async (): Promise<number> => {
     }, 0)
 
     return amount
-  } catch (e) {
-    // TODO エラーハンドリング
-    console.error(e)
-    throw e
-  }
-}
-
-export const fetchWordList = async () => {
-  try {
-    const querySnapshot = await db
-      .collection('sentences')
-      .where('uid', '==', '1xtLm7lVQSck1V2xu97ujQsIPPE3')
-      .get()
-
-    // querySnapshot.forEach(doc => {
-    //  console.log(doc.data())
-    // })
-
-    const records = querySnapshot.docs.map(doc => doc.data())
-
-    return { sentences: records }
   } catch (e) {
     // TODO エラーハンドリング
     console.error(e)

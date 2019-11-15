@@ -1,9 +1,6 @@
 import Express from 'express'
 import request from 'supertest'
 import route from '../route/'
-const firebase =  require('../firebase')
-const firebaseMock =  require('firebase-mock')
-
 
 // https://medium.com/@rickhanlonii/understanding-jest-mocks-f0046c68e53c
 // https://expressjs.com/ja/guide/writing-middleware.html
@@ -18,23 +15,26 @@ const firebaseMock =  require('firebase-mock')
 //   }
 // })
 
-
 // https://soumak77.github.io/firebase-mock/tutorials/integration/jest.html
-//jest.mock('../firebase', () => ({db: jest.fn()})) 
-//console.log(firebase.db)
-//firebase.db.mockImplementation(() => {
-//  return {collection:() => {console.log('hey')}}
-//})
-
-jest.mock('../firebase', () => ({db:{collection:jest.fn()}} ))
-firebase.db.collection.mockImplementation(() => {
-  console.log('hey')
+jest.mock('../firebase',() => {
+  const firebaseMock =  require('firebase-mock')
+  const mock = new firebaseMock.MockFirestore()
+  // flushすることで、firestoreのqueryのPromiseがresolveされるっぽいぞ
+  // https://github.com/soumak77/firebase-mock/issues/53
+  mock.autoFlush()
+  return { db:mock }
 })
+
 
 jest.mock('@line/bot-sdk', () => {
   return {
     // 以下の関数をjest.mock外に切り出すと、jest実行時にmiddlewareがundefinedになる。
-    // scopeがよくわからない。
+    // というのもjest.mockすると、コードの一番最初に実行されるらしい。(hoisting)
+    // なので、ひとまず直接ここに定義する。
+    // 関数として切り出して、mockImplementで後から実装を変更する方法でもいけるかも。
+    // しかし、その場合TypeScriptの型定義を考慮する必要がある。
+    // モックしたオブジェクトにmockImeplmentがあるということを定義する必要がある。
+    // https://stackoverflow.com/questions/51495473/typescript-and-jest-avoiding-type-errors-on-mocked-functions
 
     // Lineのリクエストから各種情報を取得するmiddlewareのモック
     middleware: (config: any) => {
@@ -58,9 +58,9 @@ jest.mock('@line/bot-sdk', () => {
     // BotがLineにレスポンスを返す機能のモック
     Client: jest.fn(() => {
       return {
-        replyMessage:() => {
+        replyMessage:(token: any, message: string) => {
           return {
-            message: 'hoge'
+            message: message
           }
         }
       }
@@ -97,12 +97,20 @@ describe("test POST /bot/webhook", () => {
   it.todo('メッセージに「餃子に」が含まれていて、数値がない場合は処理対象外になること')
   it.todo('メッセージに「餃子に」が含まれていて、数値がある場合')
   it.todo('メッセージに「餃子から」が含まれていて、数値がない場合は処理対象外になること')
-  it('メッセージに「餃子から」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「」を返すこと', async () => {
+  it('メッセージに「餃子から」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1000円を出すけろねえ」を返すこと', async () => {
     const app = setup()
     const message = '餃子から1000'
     const res:any = await request(app).post('/bot/webhook')
     .send({message})
-    expect(res.body).toEqual([null])
+    expect(res.body).toEqual([
+      { 
+        message:
+        {
+          text:"🥟から1000円を出すけろねえ", 
+          type:"text" 
+        }
+     }
+  ])
 
   })
   it.todo('メッセージに「餃子の中身」が含まれている場合')
