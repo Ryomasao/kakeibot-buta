@@ -41,5 +41,5 @@ $ git push heroku master
 ※ I've setted up master branch to heroku/master
 
 ## TEST
-jest + supertest + typescript.
 
+jest + supertest + typescript.
