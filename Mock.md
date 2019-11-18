@@ -233,4 +233,70 @@ class Member {}
 ※ function から始まる関数宣言であれば、気にしなくてもよさそうだけど、あんまり使わない方がよいかな。
 https://qiita.com/jkr_2255/items/9f9a25987dfaa81472fa
 
-### jest.implement
+### mockfn.mockImplementation で回避する
+
+ここまでは、`jest.mock`にモックするモジュールの実装を直接書いてきたが、モック関数を使うとより便利になる。  
+モック関数は`jest.fn`で作成できて、そのモックがどんな引数で呼ばれたのか？何回呼ばれたの？とかをアサートすることができる。
+
+ここでは、モック関数の実装を書くことができる`mockImplementation`を使うことで、`jest.mock`では hosting されることでできなかったことを対応してみる。
+
+```javascript
+// 2:ここで読み込むserviceモジュールは、既にモックが適用されている状態になる
+// つまり、MockedMember = jest.fn()
+import { Member as MockedMember}  from '../../service'
+
+// モックするMemberの実装
+class Member {}
+
+// 1:serviceのモックの設定
+jest.mock("../../service", () => {
+  return {
+    __esModule: true,
+    default: (id: string) => {
+      return { name: `${id}_tarou` };
+    },
+    getAge: (id: string) => {
+      return { age: `${id}_21` };
+    },
+    // Memberにはクラスではなくモック関数をセットしておく。
+    Member: jest.fn()
+  };
+});
+
+// 3: Typescriptをつかっている場合、モック状態のクラスにモック関数のメソッドがあることを教えてあげるのでキャストする必要がある
+// jest.Mocked, jest.MockedClass　とかあるけど違いがよくわかってない
+const mockedMember = MockedMember as jest.Mock
+// mockImplementationに実装を書く
+mockedMember.mockImplementation((id:string)=>{
+  return new Member(id)
+})
+
+```
+
+項番 1 のモックの設定は hoisting されるので、最初に設定される。
+なので項番 2 の状態ではモックされているモジュールになっている。
+モックされているモジュールに対して、さらにモックの変更を加えることで、以降
+別の箇所で`service`モジュールを使用している箇所でその変更が反映される。
+
+あんまりわかってないのが、`jest.mock`のときはクラスを渡していて、`mockImplementation`のときはインスタンスを返している点。
+
+```javascript
+class Member {}
+
+// jest.mockで設定するとき
+jest.mock("../../service", () => {
+  return {
+    Member: Member
+  };
+});
+
+// mockImplementationで設定するとき
+mockedMember.mockImplementation((id: string) => {
+  return new Member(id);
+});
+```
+
+`jest.mock`のときは、`service`モジュールをモックしているのに対して、`mockImplementation`は、Member クラスのモックの設定をしているっていう違いだと思う。
+
+※とはいえ、どういう違いだろう。
+https://jestjs.io/docs/ja/es6-class-mocks

@@ -1,5 +1,5 @@
 import target, {verClass} from '../../target'
-import { Member as realMember}  from '../../service'
+import { Member as MockedMember}  from '../../service'
 
 //https://remarkablemark.org/blog/2018/06/28/jest-mock-default-named-export/
 
@@ -25,10 +25,11 @@ jest.mock('../../service', () => {
   }
 })
 
-const mockedMember = realMember as jest.Mock
+const mockedMember = MockedMember as jest.Mock
 mockedMember.mockImplementation((id:string)=>{
-  // クラス定義じゃなくって、インスタンスを返すのがみそ
-  return new Member(id)
+  return function () {
+    return {getName:() => {return 'hoge'}}
+  }
 })
 
 
