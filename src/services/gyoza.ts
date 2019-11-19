@@ -37,6 +37,7 @@ export const transact = async (transaction: Transaction): Promise<number> => {
 }
 
 export const aggregate = async (): Promise<number> => {
+
   try {
     const querySnapshot = await db.collection('transactions').get()
     const records = querySnapshot.docs.map(doc => doc.data() as Transaction)
