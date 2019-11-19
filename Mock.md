@@ -278,7 +278,9 @@ mockedMember.mockImplementation((id:string)=>{
 モックされているモジュールに対して、さらにモックの変更を加えることで、以降
 別の箇所で`service`モジュールを使用している箇所でその変更が反映される。
 
-あんまりわかってないのが、`jest.mock`のときはクラスを渡していて、`mockImplementation`のときはインスタンスを返している点。
+#### 補足
+
+あんまりわかってないのが、`jest.mock`のときはクラスを渡していて、`mockImplementation`のときはインスタンスを返さないとうまくいかない点。
 
 ```javascript
 class Member {}
@@ -292,11 +294,27 @@ jest.mock("../../service", () => {
 
 // mockImplementationで設定するとき
 mockedMember.mockImplementation((id: string) => {
+  // インスタンスを返却する
   return new Member(id);
 });
 ```
 
-`jest.mock`のときは、`service`モジュールをモックしているのに対して、`mockImplementation`は、Member クラスのモックの設定をしているっていう違いだと思う。
+[公式|https://jestjs.io/docs/ja/es6-class-mocks#%E3%83%A2%E3%82%B8%E3%83%A5%E3%83%BC%E3%83%AB%E3%83%95%E3%82%A1%E3%82%AF%E3%83%88%E3%83%AA%E9%96%A2%E6%95%B0%E3%81%AF%E9%96%A2%E6%95%B0%E3%82%92%E8%BF%94%E3%81%95%E3%81%AA%E3%81%91%E3%82%8C%E3%81%B0%E3%81%AA%E3%82%89%E3%81%AA%E3%81%84
+]を見る限り、`jest.mock`のモジュールファクトリは、コンストラクタ関数を返せっていってるので、クラス定義(ただん関数)でよくって、`mockImplementation`のときは、オブジェクトを返すっぽいのかな。
 
-※とはいえ、どういう違いだろう。
-https://jestjs.io/docs/ja/es6-class-mocks
+```javascript
+// jest.mockでモックしたMemberクラスをnewしたときの挙動を想定
+// 以下の記事が大変わかりやすかった
+// https://qiita.com/takeharu/items/010752b1427773558f7c
+function Member() {
+  this = {}
+  // プロトタイプの設定とか
+  return this
+  }
+
+// mockImplementionでモックしたMemberクラスをnewしたときの挙動
+function() {
+  //Objectは new Memberした結果のインスタンス
+  return Object
+}
+```
