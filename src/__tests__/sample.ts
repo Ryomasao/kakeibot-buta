@@ -1,5 +1,5 @@
-import target, {verClass} from '../../target'
-import getName, { getAge, Member as MockedMember}  from '../../service'
+import target, {verClass} from '../sampleTest/target'
+import getName, { getAge, Member as MockedMember}  from '../sampleTest/service'
 
 //https://remarkablemark.org/blog/2018/06/28/jest-mock-default-named-export/
 
@@ -28,7 +28,7 @@ class Member {
 //  }
 //}
 
-jest.mock('../../service', () => {
+jest.mock('../sampleTest/service', () => {
   return {
     __esModule:true,
     default: jest.fn((id:string) => { return { name:`${id}_tarou` }}),
