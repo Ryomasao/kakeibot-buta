@@ -1,5 +1,5 @@
 import target, {verClass} from '../../target'
-import { Member as MockedMember}  from '../../service'
+import getName, { getAge, Member as MockedMember}  from '../../service'
 
 //https://remarkablemark.org/blog/2018/06/28/jest-mock-default-named-export/
 
@@ -31,8 +31,8 @@ class Member {
 jest.mock('../../service', () => {
   return {
     __esModule:true,
-    default: (id:string) => { return { name:`${id}_tarou` }},
-    getAge: (id:string) => { return { age: `${id}_21` }},
+    default: jest.fn((id:string) => { return { name:`${id}_tarou` }}),
+    getAge: jest.fn((id:string) => { return { age: `${id}_21` }}),
     // mockImplementationパターン
     Member: jest.fn()
   }
@@ -45,5 +45,7 @@ mockedMember.mockImplementation((id:string) =>{
 
 it("targetにtarouを設定して実行すると{result: 'tarou'}}が返却されること", () => {
   expect(target('01')).toEqual({ name:'01_tarou', age:'01_21' })
+  expect(getName).toHaveBeenCalledTimes(1)
+  expect(getAge).toHaveBeenCalledTimes(1)
   expect(verClass('01')).toEqual({ name:'01_tarou', age:'01_21' })
 })

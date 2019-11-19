@@ -318,3 +318,51 @@ function() {
   return Object
 }
 ```
+
+### jest.fn
+
+`mockImplementation`ででてきた`jest.fn`について。
+
+以下のように`jest.fn`でラップすると、モックされた関数は、`jest.fn`の機能をもつ関数として使うことができる。
+
+```javascript
+jest.mock("../../service", () => {
+  return {
+    __esModule: true,
+    //jest.fnでラップ
+    default: jest.fn((id: string) => {
+      return { name: `${id}_tarou` };
+    }),
+    //jest.fnでラップ
+    getAge: jest.fn((id: string) => {
+      return { age: `${id}_21` };
+    }),
+    // mockImplementationパターン
+    Member: jest.fn()
+  };
+});
+```
+
+上記モックをした状態で、モックされた関数を import してテスト内でアサーションすることができる。
+できることはいっぱいあるので、公式を確認する。
+
+API 呼び出しとかは、API に渡すリクエストの値をテストしたり、とある条件のときは API を呼び出さないとかあるので、そういった場合に`jest.fn`を使うと便利。
+その場合、beforeEach とかで、モック関数の設定を毎回リセットすることを忘れないようにする。
+
+```javascript
+import getName, { getAge, Member as MockedMember } from "../../service";
+
+it("targetにtarouを設定して実行すると{result: 'tarou'}}が返却されること", () => {
+  expect(target("01")).toEqual({ name: "01_tarou", age: "01_21" });
+
+  // モックされた関数が何回よばれたかをアサート
+  expect(getName).toHaveBeenCalledTimes(1);
+  expect(getAge).toHaveBeenCalledTimes(1);
+
+  expect(verClass("01")).toEqual({ name: "01_tarou", age: "01_21" });
+});
+```
+
+### 追記予定
+
+・jest.spyon
