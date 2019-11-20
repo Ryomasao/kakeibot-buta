@@ -10,15 +10,6 @@ const lineConfig = {
   channelSecret: process.env.LINE_CHANNEL_SECRET || '',
 }
 
-router.post('/', line.middleware(lineConfig), async (req, res, next) => {
-  try {
-    const results = await Promise.all(req.body.events.map(handleEvent))
-    res.json(results)
-  } catch (error) {
-    console.log(error) 
-  }
-})
-
 const client = new line.Client(lineConfig)
 
 const handleEvent = async (event: any) => {
@@ -45,5 +36,13 @@ const handleEvent = async (event: any) => {
   return client.replyMessage(event.replyToken, createMessage(operateResult))
 }
 
+router.post('/', line.middleware(lineConfig), async (req, res) => {
+  try {
+    const results = await Promise.all(req.body.events.map(handleEvent))
+    res.json(results)
+  } catch (error) {
+    console.log(error)
+  }
+})
 
 export default router

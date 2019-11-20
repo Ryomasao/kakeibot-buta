@@ -11,20 +11,6 @@ export type OpretateResult = {
   amount: number
 }
 
-export const operate = async (op: Operation): Promise<OpretateResult> => {
-  let amount = 0
-  if (
-    op.type === OpertationType.deposit ||
-    op.type === OpertationType.withdraw
-  ) {
-    amount = await transact(op)
-  } else {
-    amount = await aggregate()
-  }
-
-  return { type: op.type, amount }
-}
-
 export const transact = async (transaction: Transaction): Promise<number> => {
   try {
     await db.collection('transactions').add(transaction)
@@ -37,7 +23,6 @@ export const transact = async (transaction: Transaction): Promise<number> => {
 }
 
 export const aggregate = async (): Promise<number> => {
-
   try {
     const querySnapshot = await db.collection('transactions').get()
     const records = querySnapshot.docs.map(doc => doc.data() as Transaction)
@@ -53,4 +38,18 @@ export const aggregate = async (): Promise<number> => {
     console.error(e)
     throw e
   }
+}
+
+export const operate = async (op: Operation): Promise<OpretateResult> => {
+  let amount = 0
+  if (
+    op.type === OpertationType.deposit ||
+    op.type === OpertationType.withdraw
+  ) {
+    amount = await transact(op)
+  } else {
+    amount = await aggregate()
+  }
+
+  return { type: op.type, amount }
 }
