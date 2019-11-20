@@ -1,7 +1,6 @@
 import Express from 'express'
 import request from 'supertest'
 import route from '../route/'
-import { db } from '../firebase'
 
 // https://medium.com/@rickhanlonii/understanding-jest-mocks-f0046c68e53c
 // https://expressjs.com/ja/guide/writing-middleware.html
@@ -19,11 +18,17 @@ import { db } from '../firebase'
 // https://soumak77.github.io/firebase-mock/tutorials/integration/jest.html
 jest.mock('../firebase',() => {
   const firebaseMock =  require('firebase-mock')
-  const mock = new firebaseMock.MockFirestore()
+  const mockfirestore = new firebaseMock.MockFirestore()
   // flushすることで、firestoreのqueryのPromiseがresolveされるっぽいぞ
   // https://github.com/soumak77/firebase-mock/issues/53
-  mock.autoFlush()
-  return { db:mock }
+  mockfirestore.autoFlush()
+  return { 
+    db:mockfirestore, 
+    reset: function(this: any) {
+      const mockfirestore = new firebaseMock.MockFirestore()
+      mockfirestore.autoFlush()
+      this.db = mockfirestore
+  } }
 })
 
 
@@ -74,16 +79,17 @@ jest.mock('@line/bot-sdk', () => {
 // fireStoreのデータが各テスト間で残っちゃうので
 // mockの設定でどうにかいけないかissue
 // https://github.com/soumak77/firebase-mock/issues/119
-const truncateFireStore = async () => {
-  const querySnapshot = await db.collection('transactions').get()
-  if(querySnapshot.size === 0) return
-  let batch = db.batch()
-  querySnapshot.docs.forEach(doc => batch.delete(doc.ref))
-  await batch.commit()
-}
+//const truncateFireStore = async () => {
+//  const querySnapshot = await db.collection('transactions').get()
+//  if(querySnapshot.size === 0) return
+//  let batch = db.batch()
+//  querySnapshot.docs.forEach((doc:any) => batch.delete(doc.ref))
+//  await batch.commit()
+//}
+// ↑リセット関数を使うことで対応できた！
 
 const setup = async () => {
-  await truncateFireStore()
+  //await truncateFireStore()
   const app = Express()
   // line-sdkではミドルウェア内でbody-parserをしている。
   // テスト時には、line-sdkをモックするので、body-parserを個別に追加しとく。
@@ -92,6 +98,19 @@ const setup = async () => {
   app.use(route)
   return app
 }
+
+// reset関数は、モックした結果作成される関数なので、importだとtypescriptのエラーになってしまう。
+// requireを使うことでエラーを回避できる。
+// また、以下の参照の仕方だとreset関数のthisのコンテキストがかわってが正しく取得できないので、firebase全体を読み込むことにする
+// const reset = require('../firebase').reset ← thisのコンテキストはグローバル？
+
+// const reset = require('../firebase') ← thisのコンテキストはグローバル？
+// firebase.reset() ← thisのコンテキストは、firebaseオブジェクト
+const firebase = require('../firebase')
+
+beforeEach(() => {
+  firebase.reset()
+})
 
 describe("test GET /dummy", () => {
   it('/dummy にGETしたとき、想定したレスポンスが返却されること', async () => {
@@ -109,9 +128,22 @@ describe("test POST /bot/webhook", () => {
     .send({message})
     expect(res.body).toEqual([null])
   })
-  it.todo('メッセージに「餃子に」が含まれていて、数値がない場合は処理対象外になること')
-  it.todo('メッセージに「餃子に」が含まれていて、数値がある場合')
-  it.todo('メッセージに「餃子から」が含まれていて、数値がない場合は処理対象外になること')
+  it('メッセージに「餃子に」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1000円を入れるけろねえ」を返すこと', async () => {
+    const app = await setup()
+    const message = '餃子に1000'
+    const res:any = await request(app).post('/bot/webhook')
+    .send({message})
+    expect(res.body).toEqual([
+      { 
+        message:
+        {
+          text:"🥟に1000円を入れるけろねえ", 
+          type:"text" 
+        }
+     }
+  ])
+
+  })
   it('メッセージに「餃子から」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1000円を出すけろねえ」を返すこと', async () => {
     const app = await setup()
     const message = '餃子から1000'
@@ -128,10 +160,17 @@ describe("test POST /bot/webhook", () => {
   ])
 
   })
+  it('メッセージに「餃子に」または「餃子から」が含まれていて、数値がない場合は処理対象外になること', async () => {
+    const app = await setup()
+    const message = '餃子に'
+    const res:any = await request(app).post('/bot/webhook')
+    .send({message})
+    expect(res.body).toEqual([null])
+  })
   it('メッセージに「餃子の中身」が含まれている場合,firebaseのtransactionsを計算して、メッセージ「🥟の中身はxxxx円けろねえ」を返す', async () => {
     const app = await setup()
-    db.collection('transactions').add({ type:1, amount: 1000 })
-    db.collection('transactions').add({ type:2, amount: 2000 })
+    firebase.db.collection('transactions').add({ type:1, amount: 1000 })
+    firebase.db.collection('transactions').add({ type:2, amount: 2000 })
     const message = '餃子の中身'
     const res:any = await request(app).post('/bot/webhook')
     .send({message})
