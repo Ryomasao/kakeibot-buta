@@ -1,0 +1,18 @@
+{
+  // vscodeで保存時にeslint --fixを走らせる
+  "eslint.autoFixOnSave": true,
+  "eslint.validate": [
+    "javascript",
+    { "language": "typescript", "autoFix": true }
+  ],
+
+  // 一方、save時にPrettierを走らせる設定になっているのであれば
+  // js系はeslint越しで設定を行うため、設定を個別に切る
+  "editor.formatOnSave": true,
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
+  "[typescript]": {
+    "editor.formatOnSave": false
+  }
+}

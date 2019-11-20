@@ -21,22 +21,6 @@ type Inquiry = {
 
 export type Operation = Transaction | Inquiry
 
-export const lineTextParser = (text: string): Operation | null => {
-  if (!isBotKeyWord(text)) return null
-
-  const operationType = getOperation(text)
-  if (!operationType) return null
-
-  if (operationType === OpertationType.aggregate) {
-    return { type: OpertationType.aggregate }
-  }
-
-  const amountText = getMoneyText(text)
-  if (!amountText) return null
-
-  return { type: operationType, amount: Number(amountText) }
-}
-
 export const createMessage = (op: OpretateResult): line.TextMessage => {
   let text = ''
 
@@ -78,7 +62,7 @@ const getOperation = (text: string): OpertationType | null => {
   const begin = text.indexOf(BOT_KEYWORD)
   const operationText = text.slice(
     begin + BOT_KEYWORD.length,
-    begin + BOT_KEYWORD.length + 3
+    begin + BOT_KEYWORD.length + 3,
   )
 
   if (operationText.slice(0, 2) === 'から') return OpertationType.withdraw
@@ -88,4 +72,20 @@ const getOperation = (text: string): OpertationType | null => {
   if (operationText.slice(0, 3) === 'の中身') return OpertationType.aggregate
 
   return null
+}
+
+export const lineTextParser = (text: string): Operation | null => {
+  if (!isBotKeyWord(text)) return null
+
+  const operationType = getOperation(text)
+  if (!operationType) return null
+
+  if (operationType === OpertationType.aggregate) {
+    return { type: OpertationType.aggregate }
+  }
+
+  const amountText = getMoneyText(text)
+  if (!amountText) return null
+
+  return { type: operationType, amount: Number(amountText) }
 }

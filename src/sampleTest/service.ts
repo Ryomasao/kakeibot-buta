@@ -1,16 +1,15 @@
-
-const getName = (id:string) => {
+const getName = (id: string) => {
   return { name: `${id}_tarou` }
 }
 
-export const getAge = (id:string) => {
+export const getAge = (id: string) => {
   return { age: `${id}_21` }
 }
 
 export class Member {
-  id:string 
-  constructor(id:string) {
-    this.id = id 
+  id: string
+  constructor(id: string) {
+    this.id = id
   }
   getName() {
     return { name: `${this.id}_tarou` }

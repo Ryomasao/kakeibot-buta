@@ -4,7 +4,7 @@ import route from '../route/'
 
 // https://medium.com/@rickhanlonii/understanding-jest-mocks-f0046c68e53c
 // https://expressjs.com/ja/guide/writing-middleware.html
-// spyOnが一番良さそうなんだけど、以下の方法だと、mockできなかった。 
+// spyOnが一番良さそうなんだけど、以下の方法だと、mockできなかった。
 // なぜだろう。
 // const linemock = jest.spyOn(line, 'middleware')
 // linemock.mockImplementation((config:any) => {
@@ -16,21 +16,23 @@ import route from '../route/'
 // })
 
 // https://soumak77.github.io/firebase-mock/tutorials/integration/jest.html
-jest.mock('../firebase',() => {
-  const firebaseMock =  require('firebase-mock')
+jest.mock('../firebase', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const firebaseMock = require('firebase-mock')
   const mockfirestore = new firebaseMock.MockFirestore()
   // flushすることで、firestoreのqueryのPromiseがresolveされるっぽいぞ
   // https://github.com/soumak77/firebase-mock/issues/53
   mockfirestore.autoFlush()
-  return { 
-    db:mockfirestore, 
+  return {
+    db: mockfirestore,
     reset: function(this: any) {
       const mockfirestore = new firebaseMock.MockFirestore()
       mockfirestore.autoFlush()
       this.db = mockfirestore
-  } }
+      return
+    },
+  }
 })
-
 
 jest.mock('@line/bot-sdk', () => {
   return {
@@ -43,20 +45,21 @@ jest.mock('@line/bot-sdk', () => {
     // https://stackoverflow.com/questions/51495473/typescript-and-jest-avoiding-type-errors-on-mocked-functions
 
     // Lineのリクエストから各種情報を取得するmiddlewareのモック
-    middleware: (config: any) => {
-      return (req:any, res:any, next:any) => {
 
-         const event = {
-           replyToken:'aaa',
-           type:'message',
-           message: {
-             type: 'text',
-             text:  req.body.message 
-           }
-         }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    middleware: (config: any) => {
+      return (req: any, res: any, next: any) => {
+        const event = {
+          replyToken: 'aaa',
+          type: 'message',
+          message: {
+            type: 'text',
+            text: req.body.message,
+          },
+        }
 
         req.body = {
-          events:[event]
+          events: [event],
         }
         next()
       }
@@ -64,16 +67,15 @@ jest.mock('@line/bot-sdk', () => {
     // BotがLineにレスポンスを返す機能のモック
     Client: jest.fn(() => {
       return {
-        replyMessage:(token: any, message: string) => {
+        replyMessage: (token: any, message: string) => {
           return {
-            message: message
+            message: message,
           }
-        }
+        },
       }
-    })
+    }),
   }
 })
-
 
 // https://firebase.google.com/docs/firestore/manage-data/delete-data?hl=ja
 // fireStoreのデータが各テスト間で残っちゃうので
@@ -106,82 +108,83 @@ const setup = async () => {
 
 // const reset = require('../firebase') ← thisのコンテキストはグローバル？
 // firebase.reset() ← thisのコンテキストは、firebaseオブジェクト
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const firebase = require('../firebase')
 
 beforeEach(() => {
   firebase.reset()
 })
 
-describe("test GET /dummy", () => {
+describe('test GET /dummy', () => {
   it('/dummy にGETしたとき、想定したレスポンスが返却されること', async () => {
     const app = await setup()
-    const res:any = await request(app).get('/dummy')
-    expect(res.body).toEqual({message: 'hello'})
+    const res: any = await request(app).get('/dummy')
+    expect(res.body).toEqual({ message: 'hello' })
   })
 })
 
-describe("test POST /bot/webhook", () => {
+describe('test POST /bot/webhook', () => {
   it('メッセージに「餃子」を含まない場合、処理対象外になること', async () => {
     const app = await setup()
     const message = ''
-    const res:any = await request(app).post('/bot/webhook')
-    .send({message})
+    const res: any = await request(app)
+      .post('/bot/webhook')
+      .send({ message })
     expect(res.body).toEqual([null])
   })
   it('メッセージに「餃子に」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1000円を入れるけろねえ」を返すこと', async () => {
     const app = await setup()
     const message = '餃子に1000'
-    const res:any = await request(app).post('/bot/webhook')
-    .send({message})
+    const res: any = await request(app)
+      .post('/bot/webhook')
+      .send({ message })
     expect(res.body).toEqual([
-      { 
-        message:
-        {
-          text:"🥟に1000円を入れるけろねえ", 
-          type:"text" 
-        }
-     }
-  ])
-
+      {
+        message: {
+          text: '🥟に1000円を入れるけろねえ',
+          type: 'text',
+        },
+      },
+    ])
   })
   it('メッセージに「餃子から」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1000円を出すけろねえ」を返すこと', async () => {
     const app = await setup()
     const message = '餃子から1000'
-    const res:any = await request(app).post('/bot/webhook')
-    .send({message})
+    const res: any = await request(app)
+      .post('/bot/webhook')
+      .send({ message })
     expect(res.body).toEqual([
-      { 
-        message:
-        {
-          text:"🥟から1000円を出すけろねえ", 
-          type:"text" 
-        }
-     }
-  ])
-
+      {
+        message: {
+          text: '🥟から1000円を出すけろねえ',
+          type: 'text',
+        },
+      },
+    ])
   })
   it('メッセージに「餃子に」または「餃子から」が含まれていて、数値がない場合は処理対象外になること', async () => {
     const app = await setup()
     const message = '餃子に'
-    const res:any = await request(app).post('/bot/webhook')
-    .send({message})
+    const res: any = await request(app)
+      .post('/bot/webhook')
+      .send({ message })
     expect(res.body).toEqual([null])
   })
   it('メッセージに「餃子の中身」が含まれている場合,firebaseのtransactionsを計算して、メッセージ「🥟の中身はxxxx円けろねえ」を返す', async () => {
     const app = await setup()
-    firebase.db.collection('transactions').add({ type:1, amount: 1000 })
-    firebase.db.collection('transactions').add({ type:2, amount: 2000 })
+    firebase.db.collection('transactions').add({ type: 1, amount: 1000 })
+    firebase.db.collection('transactions').add({ type: 2, amount: 2000 })
     const message = '餃子の中身'
-    const res:any = await request(app).post('/bot/webhook')
-    .send({message})
+    const res: any = await request(app)
+      .post('/bot/webhook')
+      .send({ message })
     expect(res.body).toEqual([
-      { 
-        message:
-        {
-          text:"🥟の中身は-1000円けろねえ", 
-          type:"text" 
-        }
-     }
-  ])
+      {
+        message: {
+          text: '🥟の中身は-1000円けろねえ',
+          type: 'text',
+        },
+      },
+    ])
   })
 })
