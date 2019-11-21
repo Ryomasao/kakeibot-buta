@@ -1,6 +1,7 @@
 import Express from 'express'
 import * as line from '@line/bot-sdk'
-import { lineTextParser, createMessage } from '../../services/lineParser'
+import { lineTextParser } from '../../services/lineParser'
+import { createMessage } from '../../services/message'
 import { operate } from '../../services/gyoza'
 
 const router = Express.Router()

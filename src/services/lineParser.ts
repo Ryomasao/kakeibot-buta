@@ -1,6 +1,4 @@
 import { toASCII } from '../util/toASCII'
-import * as line from '@line/bot-sdk'
-import { OpretateResult } from './gyoza'
 
 const BOT_KEYWORD = '餃子'
 
@@ -20,27 +18,6 @@ type Inquiry = {
 }
 
 export type Operation = Transaction | Inquiry
-
-export const createMessage = (op: OpretateResult): line.TextMessage => {
-  let text = ''
-
-  if (
-    op.type === OpertationType.deposit ||
-    op.type === OpertationType.withdraw
-  ) {
-    text =
-      op.type === OpertationType.deposit
-        ? `🥟に${op.amount}円を入れるけろねえ`
-        : `🥟から${op.amount}円を出すけろねえ`
-  } else {
-    text = `🥟の中身は${op.amount}円けろねえ`
-  }
-
-  return {
-    type: 'text',
-    text,
-  }
-}
 
 const isBotKeyWord = (text: string): boolean => {
   const regex = new RegExp(BOT_KEYWORD, 'i')
