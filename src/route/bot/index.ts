@@ -1,7 +1,8 @@
 import Express from 'express'
 import * as line from '@line/bot-sdk'
-import { lineTextParser, createMessage } from '../../services/lineParser'
+import { lineTextParser } from '../../services/lineParser'
 import { operate } from '../../services/gyoza'
+import LineService from '../../services/Line'
 
 const router = Express.Router()
 
@@ -10,30 +11,14 @@ const lineConfig = {
   channelSecret: process.env.LINE_CHANNEL_SECRET || '',
 }
 
-const client = new line.Client(lineConfig)
-
 const handleEvent = async (event: any) => {
-  // Webhookとの疎通確認の場合のtokenはこれっぽい
-  // replyMessageで落ちるので、nullをresolveする
-  if (
-    event.replyToken === '00000000000000000000000000000000' ||
-    event.replyToken === 'ffffffffffffffffffffffffffffffff'
-  ) {
+  const lineService = new LineService(event, lineTextParser)
+  const operateObj = lineService.getOperateType()
+  if (!operateObj) {
     return null
   }
-
-  if (event.type !== 'message' || event.message.type !== 'text') {
-    return null
-  }
-
-  const parsedObj = lineTextParser(event.message.text)
-  if (!parsedObj) {
-    return null
-  }
-
-  const operateResult = await operate(parsedObj)
-
-  return client.replyMessage(event.replyToken, createMessage(operateResult))
+  const operateResult = await operate(operateObj)
+  return lineService.reply(operateResult)
 }
 
 router.post('/', line.middleware(lineConfig), async (req, res) => {
