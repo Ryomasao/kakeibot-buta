@@ -1,6 +1,6 @@
 import Express from 'express'
 import request from 'supertest'
-import route from '../route/'
+import route from '../route'
 
 // https://medium.com/@rickhanlonii/understanding-jest-mocks-f0046c68e53c
 // https://expressjs.com/ja/guide/writing-middleware.html
