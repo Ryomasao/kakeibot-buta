@@ -1,4 +1,4 @@
-import { db } from '../firebase'
+import firebase, { db } from '../firebase'
 import { OpertationType, Operation } from './lineParser'
 
 type Transaction = {
@@ -13,7 +13,10 @@ export type OpretateResult = {
 
 export const transact = async (transaction: Transaction): Promise<number> => {
   try {
-    await db.collection('transactions').add(transaction)
+    await db.collection('transactions').add({
+      ...transaction,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    })
     return transaction.amount
   } catch (e) {
     // TODO エラーハンドリング
