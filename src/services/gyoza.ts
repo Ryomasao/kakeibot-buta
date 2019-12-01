@@ -6,6 +6,12 @@ type Transaction = {
   amount: number
 }
 
+type TransactionRecored = Transaction & {
+  // firestoreのtimestamp型
+  // toDate()でjsのDate型に変換できる
+  timestamp: firebase.firestore.Timestamp
+}
+
 export type OpretateResult = {
   type: OpertationType
   amount: number
@@ -15,6 +21,7 @@ export const transact = async (transaction: Transaction): Promise<number> => {
   try {
     await db.collection('transactions').add({
       ...transaction,
+      // 取引データ保存時に、timestampを保持するように設定する
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     })
     return transaction.amount
@@ -28,7 +35,10 @@ export const transact = async (transaction: Transaction): Promise<number> => {
 export const aggregate = async (): Promise<number> => {
   try {
     const querySnapshot = await db.collection('transactions').get()
-    const records = querySnapshot.docs.map(doc => doc.data() as Transaction)
+    const records = querySnapshot.docs.map(
+      doc => doc.data() as TransactionRecored,
+    )
+
     const amount = records.reduce((acc, cur) => {
       return cur.type === OpertationType.deposit
         ? acc + cur.amount
