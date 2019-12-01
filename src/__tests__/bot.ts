@@ -24,6 +24,9 @@ jest.mock('../firebase', () => {
   // https://github.com/soumak77/firebase-mock/issues/53
   mockfirestore.autoFlush()
   return {
+    // defualt exportをmockする
+    __esModule: true,
+    default: { firestore: firebaseMock.MockFirestore },
     db: mockfirestore,
     reset: function(this: any) {
       const mockfirestore = new firebaseMock.MockFirestore()
