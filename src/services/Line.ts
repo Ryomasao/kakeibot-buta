@@ -33,8 +33,12 @@ export default class LineService {
     )
   }
 
+  // TODO parserを外からもらうようにしているので、messageも外からもらったほうがいい気がしてきた
   private createMessage(op: OpretateResult) {
     let text = ''
+
+    // 3桁区切りにする
+    const amount = op.amount.toLocaleString()
 
     if (
       op.type === OpertationType.deposit ||
@@ -42,10 +46,10 @@ export default class LineService {
     ) {
       text =
         op.type === OpertationType.deposit
-          ? `🥟に${op.amount}円を入れるけろねえ`
-          : `🥟から${op.amount}円を出すけろねえ`
+          ? `🥟に${amount}円を入れるけろねえ`
+          : `🥟から${amount}円を出すけろねえ`
     } else {
-      text = `🥟の中身は${op.amount}円けろねえ`
+      text = `🥟の中身は${amount}円けろねえ`
     }
 
     return {

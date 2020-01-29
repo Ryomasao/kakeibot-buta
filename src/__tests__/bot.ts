@@ -135,7 +135,7 @@ describe('test POST /bot/webhook', () => {
       .send({ message })
     expect(res.body).toEqual([null])
   })
-  it('メッセージに「餃子に」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1000円を入れるけろねえ」を返すこと', async () => {
+  it('メッセージに「餃子に」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1,000円を入れるけろねえ」を返すこと', async () => {
     const app = await setup()
     const message = '餃子に1000'
     const res: any = await request(app)
@@ -144,13 +144,13 @@ describe('test POST /bot/webhook', () => {
     expect(res.body).toEqual([
       {
         message: {
-          text: '🥟に1000円を入れるけろねえ',
+          text: '🥟に1,000円を入れるけろねえ',
           type: 'text',
         },
       },
     ])
   })
-  it('メッセージに「餃子から」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1000円を出すけろねえ」を返すこと', async () => {
+  it('メッセージに「餃子から」が含まれていて、数値がある場合、数値の内容をfirebaseに保存して、メッセージ「🥟から1,000円を出すけろねえ」を返すこと', async () => {
     const app = await setup()
     const message = '餃子から1000'
     const res: any = await request(app)
@@ -159,7 +159,7 @@ describe('test POST /bot/webhook', () => {
     expect(res.body).toEqual([
       {
         message: {
-          text: '🥟から1000円を出すけろねえ',
+          text: '🥟から1,000円を出すけろねえ',
           type: 'text',
         },
       },
@@ -184,7 +184,7 @@ describe('test POST /bot/webhook', () => {
     expect(res.body).toEqual([
       {
         message: {
-          text: '🥟の中身は-1000円けろねえ',
+          text: '🥟の中身は-1,000円けろねえ',
           type: 'text',
         },
       },
